@@ -60,9 +60,6 @@ app.get('/youtube', (req,res,next)=>{
  });
 });
 
-app.post('/getResponse',(req,res,next)=>{
- console.log(req.body);
-});
 
 
 app.listen(port, () => {
