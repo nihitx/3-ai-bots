@@ -11,6 +11,8 @@
   "dependencies": {
     "apiai": "^4.0.1",
     "body-parser": "^1.17.1",
-    "express": "^4.15.2"
+    "express": "^4.15.2",
+    "googleapis": "^18.0.0",
+    "youtube-feeds": "^2.4.1"
   }
 }
