@@ -11,17 +11,10 @@ const port = process.env.PORT || 3000;
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-//app.use(express.static(publicPath));
+app.use(express.static(publicPath));
 
 const ai = apiai("421d601de1d041b5ba3be26ee637c4ee");
 const alarm = apiai("51cd809a3978471385f60add9b42c149");
-
-app.get('/', (req,res,err) =>{
-  if(req.body){
-    res.send(req.body);
-  }else{
-    res.send('hi');
-  }
 
 });
 /* ai getting built here */
@@ -68,8 +61,8 @@ app.get('/youtube', (req,res,next)=>{
  });
 });
 
-app.get('/getResponse',(req,res,next)=>{
-
+app.post('/getResponse',(req,res,next)=>{
+  console.log(req.body);
 });
 
 
