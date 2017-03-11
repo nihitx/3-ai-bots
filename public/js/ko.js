@@ -35,23 +35,24 @@ function AppViewModel() {
       });
   }
   /* youtube ai */
-  // masnad.youtube = function() {
-  //   var youtubevid = masnad.inputYoutube();
-  //     $.ajax({
-  //         type: 'GET',
-  //         url: `http://localhost:3000/youtube?text=${youtubevid}`,
-  //         contentType: 'application/json; charset=utf-8',
-  //     })
-  //     .done(function(result) {
-  //       var x = JSON.parse(result);
-  //       window.open(x.urlLong);
-  //     })
-  //     .fail(function(xhr, status, error) {
-  //         console.log(error);
-  //     })
-  //     .always(function(data){
-  //     });
-  // }
+  masnad.callYoutube = function() {
+    var youtubevid = masnad.inputYoutubeArtist() + ' music video';
+    console.log(youtubevid);
+      $.ajax({
+          type: 'GET',
+          url: `http://localhost:3000/youtube?text=${youtubevid}`,
+          contentType: 'application/json; charset=utf-8',
+      })
+      .done(function(result) {
+        var x = JSON.parse(result);
+        window.open(x.urlLong);
+      })
+      .fail(function(xhr, status, error) {
+          console.log(error);
+      })
+      .always(function(data){
+      });
+  }
 
   masnad.youtube = function() {
       $.ajax({
@@ -64,15 +65,44 @@ function AppViewModel() {
       })
       .done(function(result) {
         /* store the artist */
-        masnad.inputYoutubeArtist(result.parameters["music-artist"]);
+        if(result.parameters){
+          if(result.parameters["music-artist"]){
+            masnad.inputYoutubeArtist(result.parameters["music-artist"]);
+          }
+        }
         /* out put result */
-        masnad.wakemeupOutput(result.fulfillment.speech);
+        if(result.fulfillment){
+          masnad.wakemeupOutput(result.fulfillment.speech);
+        }
         /* store the time */
-        if(result.parameters["time"] != null){
-          masnad.time(result.parameters["time"]);
-          console.log(masnad.time());
+        if(result.parameters){
+          if(result.parameters["time"] != null){
+            masnad.time(result.parameters["time"]);
+            console.log(masnad.time());
+          }
         }
         masnad.inputYoutube(null);
+        if(result.action == 'alarm.confirm'){
+          var x = masnad.time(); //any value you will pass
+          console.log(x);
+          let date1 = new Date();
+          date1.setHours(x.split(":")[0]);
+          date1.setMinutes(x.split(":")[1]);
+          date1.setSeconds(x.split(":")[2]);
+
+          var t = date1 - new Date();
+          var timeleft = t / 1000;
+          var downloadTimer = setInterval(function(){
+          timeleft--;
+          document.getElementById("countdowntimer").textContent = timeleft;
+          if(timeleft <= 0)
+              clearInterval(downloadTimer);
+          },1000);
+          setTimeout(function(){
+            masnad.callYoutube();
+          },t)
+
+        }
       })
       .fail(function(xhr, status, error) {
           console.log(error);
