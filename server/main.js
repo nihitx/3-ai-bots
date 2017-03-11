@@ -13,8 +13,8 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(publicPath));
 
-const ai = apiai("");
-const alarm = apiai("");
+const ai = apiai("421d601de1d041b5ba3be26ee637c4ee");
+const alarm = apiai("51cd809a3978471385f60add9b42c149");
 
 /* ai getting built here */
 app.post('/api', (req, res , err )=> {
