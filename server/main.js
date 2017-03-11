@@ -16,7 +16,6 @@ app.use(express.static(publicPath));
 const ai = apiai("421d601de1d041b5ba3be26ee637c4ee");
 const alarm = apiai("51cd809a3978471385f60add9b42c149");
 
-});
 /* ai getting built here */
 app.post('/api', (req, res , err )=> {
   var answer = req.body.text;
@@ -62,7 +61,7 @@ app.get('/youtube', (req,res,next)=>{
 });
 
 app.post('/getResponse',(req,res,next)=>{
-  console.log(req.body);
+ console.log(req.body);
 });
 
 
