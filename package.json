@@ -17,6 +17,8 @@
     "body-parser": "^1.17.1",
     "express": "^4.15.2",
     "googleapis": "^18.0.0",
+    "googleplaces": "^0.6.1",
+    "yelp-fusion": "^1.0.3",
     "youtube-feeds": "^2.4.1"
   }
 }
