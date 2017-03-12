@@ -7,8 +7,8 @@ const youtube = require('./youtube.js');
 const yelp = require('yelp-fusion');
 const app = express();
 const GooglePlaces = require('googleplaces');
-const googlePlaces = new GooglePlaces('AIzaSyDL7jYTLJMNwi7J65KxRD-sc-Qa9_7Kfa0', 'json');
-
+const config = require('./config.js');
+const googlePlaces = new GooglePlaces(config.googlePlacesKey(), 'json');
 const publicPath = path.join(__dirname, '../public');
 const port = process.env.PORT || 3000;
 
@@ -16,8 +16,8 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(publicPath));
 
-const ai = apiai("421d601de1d041b5ba3be26ee637c4ee");
-const alarm = apiai("51cd809a3978471385f60add9b42c149");
+const ai = apiai(config.apiAiKey());
+const alarm = apiai(config.apiAiAlarm());
 
 /* ai getting built here */
 app.post('/api', (req, res , next )=> {
@@ -63,7 +63,7 @@ app.get('/youtube', (req,res,next)=>{
 });
 
 /* yelp fusion api running */
-yelp.accessToken('x5n0_F1LpkuJBZ4RVDZRwQ', 'OXAjTT8vfv8irugCRTBJljwi0qxWv7S0JfJuuYXDSDaIs41AjPG6GadOI0Gnv8HZ').then(response => {
+yelp.accessToken(config.yelpClientId(), config.yelpSecretKey()).then(response => {
   const client = yelp.client(response.jsonBody.access_token);
 
  client.search({
