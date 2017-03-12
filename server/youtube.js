@@ -1,6 +1,7 @@
 const google = require ('googleapis');
+const config = require('./config.js');
 
-google.options ({ auth: 'AIzaSyBvVrV3kPzGUTKM5CMOqlz3lE6Eq9KErlw' });
+google.options ({ auth: config.youtubeKey() });
 var youtube = google.youtube ('v3');
 
 // Search Youtube -- callback is called on each found item (or error)
