@@ -1,4 +1,5 @@
 var fs = require("fs");
+var request = require('request');
 const apiai = require('apiai');
 const express = require('express');
 const path = require('path');
@@ -18,6 +19,7 @@ app.use(express.static(publicPath));
 
 const ai = apiai(config.apiAiKey());
 const alarm = apiai(config.apiAiAlarm());
+const restaurant_agent = apiai(config.restaurantAgent());
 
 /* ai getting built here */
 app.post('/api', (req, res , next )=> {
@@ -101,8 +103,30 @@ app.get('/googlePlace',(req,res,next)=>{
   });
 });
 
+app.post('/textSearch',(req,res,next)=>{
+  console.log('in google text search');
+  var param = req.body.text
+  var parameters = {
+      query: param
+  };
+
+  googlePlaces.textSearch(parameters, function (error, response) {
+      if (error) throw error;
+      var arr = [];
+      response.results.forEach((entry)=>{
+         var restaurantName = {
+          "name" : entry.name,
+          "rating" : entry.rating,
+          "place_id" : entry.place_id
+        }
+        arr.push(restaurantName);
+      });
+        res.send(arr);
+  });
+});
+
 app.get('/placeReview',(req,res,next)=>{
-  googlePlaces.placeDetailsRequest({placeid: 'ChIJW-dOr8sLkkYRrIpvcMcvb_E'},function(error,response){
+  googlePlaces.placeDetailsRequest({placeid: 'ChIJWy-H8soLkkYRgBBHQCr7eL8'},function(error,response){
     if (error) throw error;
     var storeReview = [];
     response.result.reviews.forEach((entry)=>{
@@ -111,9 +135,86 @@ app.get('/placeReview',(req,res,next)=>{
       }
       storeReview.push(review);
     });
-    return res.send(storeReview);
+    return res.send(storeReview[0]);
   });
 });
+
+/* restaurant agent */
+app.post('/getRestaurant', (req, res , next )=> {
+  var answer = req.body.text;
+  var request = restaurant_agent.textRequest(answer , {
+      sessionId: '0503657881'
+  });
+  request.on('response', function(response) {
+       return res.send(response.result);
+  });
+  request.on('error', function(error) {
+      return res.send(error);
+  });
+  request.end();
+});
+
+// for facebook verification
+app.get('/webhook', function (req, res) {
+  console.log('getting fb verification');
+	if (req.query['hub.verify_token'] === 'facebookiscallingme') {
+		res.send(req.query['hub.challenge'])
+	} else {
+		res.send('Error, wrong token')
+	}
+})
+
+// to post data
+app.post('/webhook', function (req, res) {
+	let messaging_events = req.body.entry[0].messaging
+	for (let i = 0; i < messaging_events.length; i++) {
+		let event = req.body.entry[0].messaging[i]
+		let sender = event.sender.id
+		if (event.message && event.message.text) {
+			let text = event.message.text
+			if (text === 'Generic'){
+				console.log("welcome to chatbot")
+				//sendGenericMessage(sender)
+				continue
+			}
+			sendTextMessage(sender, "Text received, echo: " + text.substring(0, 200))
+		}
+		if (event.postback) {
+			let text = JSON.stringify(event.postback)
+			sendTextMessage(sender, "Postback received: "+text.substring(0, 200), token)
+			continue
+		}
+	}
+	res.sendStatus(200)
+})
+
+
+// recommended to inject access tokens as environmental variables, e.g.
+// const token = process.env.FB_PAGE_ACCESS_TOKEN
+const token = fb_access_token;
+
+function sendTextMessage(sender, text) {
+  console.log(sender);
+  console.log(text);
+	let messageData = { text:text }
+
+	request({
+		url: 'https://graph.facebook.com/v2.6/me/messages',
+		qs: {access_token:token},
+		method: 'POST',
+		json: {
+			recipient: {id:sender},
+			message: messageData,
+		}
+	}, function(error, response, body) {
+		if (error) {
+			console.log('Error sending messages: ', error)
+		} else if (response.body.error) {
+			console.log('Error: ', response.body.error)
+		}
+	})
+}
+
 
 
 app.listen(port, () => {

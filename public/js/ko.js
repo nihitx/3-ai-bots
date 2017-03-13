@@ -34,7 +34,7 @@ function AppViewModel() {
       .always(function(data){
       });
   }
-  /* youtube ai */
+  /* wake me up ai  */
   masnad.callYoutube = function() {
     var youtubevid = masnad.inputYoutubeArtist() + ' music video';
     console.log(youtubevid);
@@ -109,6 +109,55 @@ function AppViewModel() {
       })
       .always(function(data){
       });
+  }
+
+  /* Find best food near me ai */
+  masnad.restInfo = ko.observable();
+  masnad.displayRestInfo = ko.observable(null);
+  masnad.callrestaurantagent = function() {
+      $.ajax({
+          type: 'POST',
+          url: 'http://localhost:3000/getRestaurant',
+          contentType: 'application/json; charset=utf-8',
+          data: ko.toJSON({
+            text : masnad.restInfo()
+          })
+      })
+      .done(function(result) {
+        console.log(result);
+        masnad.displayRestInfo(result.fulfillment.speech);
+        masnad.restInfo(null);
+        if(result.actionIncomplete == false){
+          console.log('calling googleplaces');
+          masnad.googleplaces(result.parameters);
+        }
+      })
+      .fail(function(xhr, status, error) {
+          console.log(error);
+      })
+      .always(function(data){
+      });
+  }
+  masnad.googleplaces = function(param){
+    var address = param.address;
+    var food_type = param["food-type"];
+    var makeSentence = `${food_type} restaurant in ${address}`
+    $.ajax({
+        type: 'POST',
+        url: 'http://localhost:3000/textSearch',
+        contentType: 'application/json; charset=utf-8',
+        data: ko.toJSON({
+          text : makeSentence
+        })
+    })
+    .done(function(result) {
+      console.log(result);
+    })
+    .fail(function(xhr, status, error) {
+        console.log(error);
+    })
+    .always(function(data){
+    });
   }
 
 }
