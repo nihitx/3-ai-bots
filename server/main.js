@@ -65,20 +65,20 @@ app.get('/youtube', (req,res,next)=>{
 });
 
 /* yelp fusion api running */
-yelp.accessToken(config.yelpClientId(), config.yelpSecretKey()).then(response => {
-  const client = yelp.client(response.jsonBody.access_token);
-
- client.search({
-   latitude : 60.164315,
-   longitude: 24.936667,
-   price : '1,2,3',
-   limit : 5,
- }).then(response => {
-   var x = response.jsonBody.businesses;
- });
-}).catch(e => {
- console.log(e);
-});
+// yelp.accessToken(config.yelpClientId(), config.yelpSecretKey()).then(response => {
+//   const client = yelp.client(response.jsonBody.access_token);
+//
+//  client.search({
+//    latitude : 60.164315,
+//    longitude: 24.936667,
+//    price : '1,2,3',
+//    limit : 5,
+//  }).then(response => {
+//    var x = response.jsonBody.businesses;
+//  });
+// }).catch(e => {
+//  console.log(e);
+// });
 
 app.get('/googlePlace',(req,res,next)=>{
   parameters = {
@@ -177,7 +177,7 @@ app.post('/webhook', function (req, res) {
 				//sendGenericMessage(sender)
 				continue
 			}
-			sendTextMessage(sender, "Text received, echo: " + text.substring(0, 200))
+			sendTextMessage(sender,text.substring(0, 200))
 		}
 		if (event.postback) {
 			let text = JSON.stringify(event.postback)
@@ -191,31 +191,73 @@ app.post('/webhook', function (req, res) {
 
 // recommended to inject access tokens as environmental variables, e.g.
 // const token = process.env.FB_PAGE_ACCESS_TOKEN
-const token = fb_access_token;
+const token = config.fb_access_token();
 
 function sendTextMessage(sender, text) {
-  console.log(sender);
-  console.log(text);
-	let messageData = { text:text }
+  var requestAgent = restaurant_agent.textRequest(text , {
+      sessionId: '0503657881'
+  });
+  requestAgent.on('response', function(response) {
+    if(response.result.actionIncomplete === false){
+      /* if all parameters are okay send response to GooglePlaces */
+       callGooglePlacesForFB(response.result.parameters["food-type"], response.result.parameters.address,sender);
+    }else{
+      var sendingData = response.result.fulfillment.speech;
+      /* send the message to FB */
+      data = {
+        text :  sendingData
+      }
+        sendMessageToFBBot(sender,data);
+    }
 
-	request({
-		url: 'https://graph.facebook.com/v2.6/me/messages',
-		qs: {access_token:token},
-		method: 'POST',
-		json: {
-			recipient: {id:sender},
-			message: messageData,
-		}
-	}, function(error, response, body) {
-		if (error) {
-			console.log('Error sending messages: ', error)
-		} else if (response.body.error) {
-			console.log('Error: ', response.body.error)
-		}
-	})
+  });
+  requestAgent.on('error', function(error) {
+      return res.send(error);
+  });
+  requestAgent.end();
 }
 
 
+function callGooglePlacesForFB(food, address,sender){
+  var param = food + ' restaurant in ' + address ;
+  console.log(param);
+  var parameters = {
+      query: param
+  };
+  googlePlaces.textSearch(parameters, function (error, response) {
+      if (error) throw error;
+      var arr = [];
+      response.results.forEach((entry)=>{
+         var restaurantName = {
+          "name" : entry.name,
+          "rating" : entry.rating
+          // "place_id" : entry.place_id
+        }
+        //arr.push(restaurantName);
+        sendMessageToFBBot(sender,{text : `${entry.name} has a rating of ${entry.rating} and is pretty close by`});
+      });
+        //fixingFoodArray(sender,arr);
+  });
+}
+
+function sendMessageToFBBot(sender , messageData) {
+  console.log(messageData);
+    request({
+        url: 'https://graph.facebook.com/v2.6/me/messages',
+        qs: {access_token:token},
+        method: 'POST',
+        json: {
+            recipient: {id:sender},
+            message: messageData,
+        }
+    }, function(error, response, body) {
+        if (error) {
+            console.log('Error sending messages: ', error)
+        } else if (response.body.error) {
+            console.log('Error: ', response.body.error)
+        }
+    })
+}
 
 app.listen(port, () => {
   console.log(`Server is up on ${port}`);

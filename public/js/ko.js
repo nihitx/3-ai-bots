@@ -138,6 +138,7 @@ function AppViewModel() {
       .always(function(data){
       });
   }
+  masnad.storeGooglePlaces = ko.observableArray();
   masnad.googleplaces = function(param){
     var address = param.address;
     var food_type = param["food-type"];
@@ -151,7 +152,10 @@ function AppViewModel() {
         })
     })
     .done(function(result) {
-      console.log(result);
+      $.each(result, function (index, place) {
+          masnad.storeGooglePlaces.push(place);
+      });
+      console.log(masnad.storeGooglePlaces());
     })
     .fail(function(xhr, status, error) {
         console.log(error);
