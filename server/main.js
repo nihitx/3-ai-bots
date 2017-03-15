@@ -125,9 +125,43 @@ app.post('/textSearch',(req,res,next)=>{
   });
 });
 
+app.get('/textSearchh',(req,res,next)=>{
+  var arr = [];
+  var parameters = {
+      query: 'sushi restaurant near bulevardi 14 Helsinki'
+  };
+
+  googlePlaces.textSearch(parameters, function (error, response) {
+      if (error) throw error;
+      response.results.forEach((entry)=>{
+         var restaurantName = {
+          "name" : entry.name,
+          "rating" : entry.rating,
+          "photo" : entry.photos
+        }
+
+        arr.push(restaurantName);
+      });
+  });
+  var parametersImage = {
+    photoreference: arr[0].photo[0].photo_reference,
+    sensor: false
+  };
+  googlePlaces.imageFetch(parametersImage, function (error, response) {
+    if (error) throw error;
+    var x = {
+      "name" : arr[0].name,
+      "rating " : arr[0].rating,
+      "photo " : response
+    }
+      res.send(x);
+  });
+});
+
 app.get('/placeReview',(req,res,next)=>{
   googlePlaces.placeDetailsRequest({placeid: 'ChIJWy-H8soLkkYRgBBHQCr7eL8'},function(error,response){
     if (error) throw error;
+    return res.send(response.result);
     var storeReview = [];
     response.result.reviews.forEach((entry)=>{
       var review = {
@@ -230,16 +264,58 @@ function callGooglePlacesForFB(food, address,sender){
       response.results.forEach((entry)=>{
          var restaurantName = {
           "name" : entry.name,
-          "rating" : entry.rating
-          // "place_id" : entry.place_id
+          "rating" : entry.rating,
+          "photo" : entry.photos
         }
-        //arr.push(restaurantName);
-        sendMessageToFBBot(sender,{text : `${entry.name} has a rating of ${entry.rating} and is pretty close by`});
+
+        arr.push(restaurantName);
       });
-        //fixingFoodArray(sender,arr);
+      var parametersImage = {
+        photoreference: arr[0].photo[0].photo_reference,
+        sensor: false
+      };
+      console.log(parametersImage);
+      googlePlaces.imageFetch(parametersImage, function (error, response) {
+        if (error) throw error;
+        var x = {
+          "name" : arr[0].name,
+          "rating" : arr[0].rating,
+          "photo" : response
+        }
+          return GenTemp(sender, x);
+      });
   });
 }
 
+function GenTemp(sender , x){
+  console.log(x);
+  var rating = x.rating;
+  var img = x.photo ;
+  console.log(rating);
+  console.log(img);
+  messageData = {
+    "attachment":{
+      "type":"template",
+      "payload":{
+        "template_type":"generic",
+        "elements":[
+           {
+            "title":x.name,
+            "subtitle": `${x.name} rating is ${x.rating}`,
+            "buttons":[
+              {
+                "type":"web_url",
+                "url":"https://www.facebook.com/nehith",
+                "title":"View Website"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  };
+  sendMessageToFBBot(sender,messageData);
+};
 function sendMessageToFBBot(sender , messageData) {
   console.log(messageData);
     request({
