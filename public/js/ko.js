@@ -18,7 +18,7 @@ function AppViewModel() {
   masnad.information = function() {
       $.ajax({
           type: 'POST',
-          url: 'http://localhost:3000/api',
+          url: 'https://mysterious-tor-96602.herokuapp.com/api',
           contentType: 'application/json; charset=utf-8',
           data: ko.toJSON({
             text : masnad.input()
@@ -40,7 +40,7 @@ function AppViewModel() {
     console.log(youtubevid);
       $.ajax({
           type: 'GET',
-          url: `http://localhost:3000/youtube?text=${youtubevid}`,
+          url: `https://mysterious-tor-96602.herokuapp.com/youtube?text=${youtubevid}`,
           contentType: 'application/json; charset=utf-8',
       })
       .done(function(result) {
@@ -57,7 +57,7 @@ function AppViewModel() {
   masnad.youtube = function() {
       $.ajax({
           type: 'POST',
-          url: `http://localhost:3000/alarm`,
+          url: `https://mysterious-tor-96602.herokuapp.com/alarm`,
           contentType: 'application/json; charset=utf-8',
           data: ko.toJSON({
             text : masnad.inputYoutube()
@@ -117,7 +117,7 @@ function AppViewModel() {
   masnad.callrestaurantagent = function() {
       $.ajax({
           type: 'POST',
-          url: 'http://localhost:3000/getRestaurant',
+          url: 'https://mysterious-tor-96602.herokuapp.com/getRestaurant',
           contentType: 'application/json; charset=utf-8',
           data: ko.toJSON({
             text : masnad.restInfo()
@@ -145,7 +145,7 @@ function AppViewModel() {
     var makeSentence = `${food_type} restaurant in ${address}`
     $.ajax({
         type: 'POST',
-        url: 'http://localhost:3000/textSearch',
+        url: 'https://mysterious-tor-96602.herokuapp.com/textSearch',
         contentType: 'application/json; charset=utf-8',
         data: ko.toJSON({
           text : makeSentence
